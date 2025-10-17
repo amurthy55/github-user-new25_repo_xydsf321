@@ -9,30 +9,46 @@
 <body>
     <div class="container mt-5">
         <h1>GitHub User Fetcher</h1>
+        <div id="github-status" aria-live="polite"></div>
         <form id="github-user-12345" onsubmit="fetchUser(event)">
             <div class="form-group">
-                <label for="username">GitHub Username:</label>
+                <label for="username">GitHub Username</label>
                 <input type="text" class="form-control" id="username" required>
-            </div>
-            <div class="form-group">
-                <label for="token">Token (optional):</label>
-                <input type="text" class="form-control" id="token">
             </div>
             <button type="submit" class="btn btn-primary">Fetch User</button>
         </form>
-        <h3 class="mt-4">Account Creation Date:</h3>
-        <div id="github-created-at"></div>
+        <div id="github-account-age"></div>
     </div>
     <script>
-        async function fetchUser(event) {
+        function fetchUser(event) {
             event.preventDefault();
             const username = document.getElementById('username').value;
-            const token = document.getElementById('token').value;
-            const url = `https://api.github.com/users/${username}${token ? '?token=' + token : ''}`;
-            const response = await fetch(url);
-            const data = await response.json();
-            document.getElementById('github-created-at').textContent = data.created_at ? new Date(data.created_at).toISOString().split('T')[0] : 'User not found';
+            document.getElementById('github-status').textContent = 'Fetching user...';
+            // Simulate API call
+            fetch(`https://api.github.com/users/${username}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('User not found');
+                    return response.json();
+                })
+                .then(data => {
+                    const accountAge = new Date().getFullYear() - new Date(data.created_at).getFullYear();
+                    document.getElementById('github-account-age').textContent = `Account Age: ${accountAge} years (Created on: ${new Date(data.created_at).toLocaleDateString()})`;
+                    document.getElementById('github-status').textContent = 'User fetched successfully!';
+                    localStorage.setItem(`github-user-${username}`, JSON.stringify(data));
+                })
+                .catch(error => {
+                    document.getElementById('github-status').textContent = error.message;
+                });
         }
+        window.onload = function() {
+            const username = Object.keys(localStorage).find(key => key.startsWith('github-user-'));
+            if (username) {
+                const userData = JSON.parse(localStorage.getItem(username));
+                document.getElementById('username').value = username.split('-')[2];
+                const accountAge = new Date().getFullYear() - new Date(userData.created_at).getFullYear();
+                document.getElementById('github-account-age').textContent = `Account Age: ${accountAge} years (Created on: ${new Date(userData.created_at).toLocaleDateString()})`;
+            }
+        };
     </script>
 </body>
 </html>
