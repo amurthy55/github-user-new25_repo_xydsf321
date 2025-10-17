@@ -11,7 +11,7 @@
         <h1>GitHub User Fetcher</h1>
         <div id="github-status" aria-live="polite"></div>
         <form id="github-user-12345" onsubmit="fetchUser(event)">
-            <input type="text" id="github-username" placeholder="Enter GitHub Username" required />
+            <input type="text" id="github-username" placeholder="Enter GitHub Username" required>
             <button type="submit">Fetch User</button>
         </form>
         <div id="github-account-age"></div>
@@ -20,9 +20,8 @@
         function fetchUser(event) {
             event.preventDefault();
             const username = document.querySelector('#github-username').value;
-            document.querySelector('#github-status').textContent = 'Fetching user...';
-            localStorage.setItem('github-user-' + username, username);
-            fetch('https://api.github.com/users/' + username)
+            document.querySelector('#github-status').textContent = 'Lookup started...';
+            fetch(`https://api.github.com/users/${username}`)
                 .then(response => {
                     if (!response.ok) throw new Error('User not found');
                     return response.json();
@@ -30,19 +29,24 @@
                 .then(data => {
                     const createdAt = new Date(data.created_at);
                     const accountAge = new Date().getFullYear() - createdAt.getFullYear();
-                    document.querySelector('#github-account-age').textContent = 'Account Age: ' + accountAge + ' years';
-                    document.querySelector('#github-status').textContent = 'User fetched successfully!';
-                    localStorage.setItem('github-user-' + username, JSON.stringify(data));
+                    document.querySelector('#github-account-age').textContent = `Account Age: ${accountAge} years (Created on: ${createdAt.toDateString()})`;
+                    document.querySelector('#github-status').textContent = 'Lookup succeeded!';
+                    localStorage.setItem(`github-user-${username}`, JSON.stringify(data));
                 })
                 .catch(error => {
                     document.querySelector('#github-status').textContent = error.message;
                 });
         }
+
         window.onload = function() {
-            const username = localStorage.getItem('github-user-12345');
-            if (username) {
-                document.querySelector('#github-username').value = username;
-                fetchUser({ preventDefault: () => {} });
+            const username = document.querySelector('#github-username');
+            const cachedUser = localStorage.getItem(`github-user-${username.value}`);
+            if (cachedUser) {
+                const userData = JSON.parse(cachedUser);
+                username.value = userData.login;
+                const createdAt = new Date(userData.created_at);
+                const accountAge = new Date().getFullYear() - createdAt.getFullYear();
+                document.querySelector('#github-account-age').textContent = `Account Age: ${accountAge} years (Created on: ${createdAt.toDateString()})`;
             }
         };
     </script>
