@@ -15,40 +15,36 @@
             <button type="submit">Fetch User</button>
         </form>
         <div id="github-account-age"></div>
-    </div>
-    <script>
-        function fetchUser(event) {
-            event.preventDefault();
-            const username = document.querySelector('#github-username').value;
-            document.querySelector('#github-status').textContent = 'Lookup started...';
-            fetch(`https://api.github.com/users/${username}`)
-                .then(response => {
-                    if (!response.ok) throw new Error('User not found');
-                    return response.json();
-                })
-                .then(data => {
-                    const createdAt = new Date(data.created_at);
-                    const accountAge = new Date().getFullYear() - createdAt.getFullYear();
-                    document.querySelector('#github-account-age').textContent = `Account Age: ${accountAge} years (Created on: ${createdAt.toDateString()})`;
-                    document.querySelector('#github-status').textContent = 'Lookup succeeded!';
-                    localStorage.setItem(`github-user-${username}`, JSON.stringify(data));
-                })
-                .catch(error => {
-                    document.querySelector('#github-status').textContent = error.message;
-                });
-        }
-
-        window.onload = function() {
-            const username = document.querySelector('#github-username');
-            const cachedUser = localStorage.getItem(`github-user-${username.value}`);
-            if (cachedUser) {
-                const userData = JSON.parse(cachedUser);
-                username.value = userData.login;
-                const createdAt = new Date(userData.created_at);
-                const accountAge = new Date().getFullYear() - createdAt.getFullYear();
-                document.querySelector('#github-account-age').textContent = `Account Age: ${accountAge} years (Created on: ${createdAt.toDateString()})`;
+        <script>
+            function fetchUser(event) {
+                event.preventDefault();
+                const username = document.querySelector('#github-username').value;
+                document.querySelector('#github-status').textContent = 'Lookup started...';
+                fetch(`https://api.github.com/users/${username}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error('User not found');
+                        return response.json();
+                    })
+                    .then(data => {
+                        const createdAt = new Date(data.created_at);
+                        const accountAge = new Date().getFullYear() - createdAt.getFullYear();
+                        document.querySelector('#github-account-age').textContent = `Account Age: ${accountAge} years (Created on: ${createdAt.toDateString()})`;
+                        document.querySelector('#github-status').textContent = 'Lookup succeeded!';
+                        localStorage.setItem(`github-user-${username}`, JSON.stringify(data));
+                    })
+                    .catch(error => {
+                        document.querySelector('#github-status').textContent = error.message;
+                    });
             }
-        };
-    </script>
+            window.onload = function() {
+                const username = document.querySelector('#github-username').value;
+                const cachedUser = localStorage.getItem(`github-user-${username}`);
+                if (cachedUser) {
+                    const userData = JSON.parse(cachedUser);
+                    document.querySelector('#github-account-age').textContent = `Account Age: ${new Date().getFullYear() - new Date(userData.created_at).getFullYear()} years (Created on: ${new Date(userData.created_at).toDateString()})`;
+                }
+            };
+        </script>
+    </div>
 </body>
 </html>
